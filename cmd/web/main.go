@@ -17,7 +17,7 @@ type ServerConfig struct{
 func main() {
     // Get configuration
     if err := godotenv.Load(".env"); err != nil {
-        log.Print("INFO: 未找到环境文件！")
+        log.Print("INFO: 未找到环境文件！将使用默认配置")
     }
     cfg := &ServerConfig{
         Host: envutil.GetEnv("HOST", ""),
