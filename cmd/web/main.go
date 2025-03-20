@@ -45,23 +45,21 @@ func main() {
         errorLog: errorLog,
         infoLog: infoLog,
     }
-
-	mux := http.NewServeMux()
-	// Create a file server which serves files out of the "./ui/static" directory.
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
-
-	infoLog.Printf("Starting server on :%d", cfg.Port)
-	hostStr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	// TODO 可以支持两种地址模式
 	// log.Printf("Starting server on %s", *addr)
+	hostStr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	if *runMode == "flag" {
 		hostStr = *addr
 	}
-	err := http.ListenAndServe(hostStr, mux)
+
+    srv := http.Server{
+        Addr: hostStr,
+        ErrorLog: errorLog,
+        Handler: app.routes(),
+    }
+
+
+	infoLog.Printf("Starting server on :%d", cfg.Port)
+	err := srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
