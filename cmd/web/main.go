@@ -11,6 +11,11 @@ import (
 	"github.com/wangyaodream/snippetbox/internal/envutil"
 )
 
+type application struct {
+    errorLog *log.Logger
+    infoLog  *log.Logger
+}
+
 type ServerConfig struct {
 	Host string
 	Port int
@@ -26,6 +31,7 @@ func main() {
 		Port: envutil.GetInt("PORT", 4000),
 	}
 
+
 	// flag
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	runMode := flag.String("m", "env", "Run mode") // env | flag
@@ -35,14 +41,19 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Lshortfile)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+    app := &application{
+        errorLog: errorLog,
+        infoLog: infoLog,
+    }
+
 	mux := http.NewServeMux()
 	// Create a file server which serves files out of the "./ui/static" directory.
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet/view", snippetView)
-	mux.HandleFunc("/snippet/create", snippetCreate)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet/view", app.snippetView)
+	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	infoLog.Printf("Starting server on :%d", cfg.Port)
 	hostStr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
