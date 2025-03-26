@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -19,6 +20,7 @@ type application struct {
 type ServerConfig struct {
 	Host string
 	Port int
+    DB_DSN string
 }
 
 func main() {
@@ -29,6 +31,7 @@ func main() {
 	cfg := &ServerConfig{
 		Host: envutil.GetEnv("HOST", ""),
 		Port: envutil.GetInt("PORT", 4000),
+        DB_DSN: envutil.GetEnv("DB_DSN", "web:pass@/snippetbox?parseTime=true"),
 	}
 
 
@@ -40,6 +43,13 @@ func main() {
 	// Leveled logging
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Lshortfile)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+    db, err := openDB(cfg.DB_DSN)
+    if err != nil {
+        errorLog.Fatal(err)
+    }
+
+    defer db.Close()
 
     app := &application{
         errorLog: errorLog,
@@ -60,6 +70,17 @@ func main() {
 
 
 	infoLog.Printf("Starting server on :%d", cfg.Port)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+    db, err := sql.Open("mysql", dsn)
+    if err != nil {
+        return nil, err
+    }
+    if err = db.Ping(); err != nil {
+        return nil, err
+    }
+    return db, nil
 }
