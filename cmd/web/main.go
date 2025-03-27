@@ -8,13 +8,16 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"github.com/wangyaodream/snippetbox/internal/envutil"
+	"github.com/wangyaodream/snippetbox/internal/models"
 )
 
 type application struct {
     errorLog *log.Logger
     infoLog  *log.Logger
+    snippets *models.SnippetModel
 }
 
 type ServerConfig struct {
@@ -54,6 +57,7 @@ func main() {
     app := &application{
         errorLog: errorLog,
         infoLog: infoLog,
+        snippets: &models.SnippetModel{DB: db},
     }
 	// TODO 可以支持两种地址模式
 	// log.Printf("Starting server on %s", *addr)
