@@ -66,5 +66,34 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 }
 
 func (m *SnippetModel) Latest() ([]*Snippet, error) {
-	return nil, nil
+	stmt := `SELECT id, title, content, created, expires
+	FROM snippets
+	WHERE expires > UTC_TIMESTAMP()
+	ORDER BY created DESC
+	LIMIT 10`
+	// 使用Query()方法执行sql语句获取多个结果
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	// 确保在函数返回时关闭rows
+	defer rows.Close()
+	snippets := []*Snippet{}
+	// 遍历结果集
+	for rows.Next() {
+		s := &Snippet{}
+		// 使用Scan()方法将查询结果赋值给Snippet对象
+		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+		if err != nil {
+			return nil, err
+		}
+		// 将Snippet对象添加到切片中
+		snippets = append(snippets, s)
+	}
+	// 检查遍历结果集时是否发生错误
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	// 返回切片
+	return snippets, nil
 }
